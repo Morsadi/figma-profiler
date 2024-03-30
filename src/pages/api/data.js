@@ -2,29 +2,41 @@ const Figma = require('figma-js');
 const flatted = require('flatted');
 
 export default async function handler(req, res) {
-    const client = Figma.Client({
-        // personalAccessToken: 'figd_cAj3NqUayq-YaWZXXynaeHyFSv0FUpR8ZiktyWEg',
-        personalAccessToken: 'figd_06hAC8x5_bIiWqLdl4c6Y09S--eIkabjDnArmuOt',
-    });
+	const client = Figma.Client({
+		personalAccessToken: process.env.ACCESS_TOKEN,
+	});
 
-    const fileKey = 'eG9oxCYlvvYWDraiQUzalz';
-    const sheboygan = 'UWjiCxyBeFAhbnjDeeRPx3';
-    const componentNodeId = '1642-304';
+	const fileKey = 'eG9oxCYlvvYWDraiQUzalz'; // should be in the URL
+	const pageFrame = 'library-lg';
+	const widgetFrame = 'testing';
 
-    
-    try {
-        const file = await client.file(fileKey);
-        const { data } = file;
-        let result = Object.entries(file);
-        let board = data.document.children[0];
-        let page = board.children.filter(val => val.name === 'library-lg')[0];
-        let widget = page.children.filter(val => val.name === 'testing')[0].children;
-        
+	try {
+		const file = await client.file(fileKey);
+		const { data = {} } = file;
 
-        res.status(200).json(widget || 'Nothing' );
-    } catch (err) {
-        console.error('Error fetching Figma file:', err);
-        res.status(500).json({ error: 'Error fetching Figma file', err: err.message });
-    }
+		if (!data || !data.document || !data.document.children || data.document.children.length === 0) {
+			// Handle the case where there is no data or an empty document
+			throw new Error('No data available in Figma file.');
+		}
+
+		let board = data.document.children[0];
+		let page = board.children.filter((val) => val.name === pageFrame)[0];
+
+		if (!page || !page.children || page.children.length === 0) {
+			// Handle the case where there are no pages or an empty page
+			throw new Error('No page or empty page found.');
+		}
+
+		let widget = page.children.filter((val) => val.name === widgetFrame)[0];
+
+		if (!widget || !widget.children || widget.children.length === 0) {
+			// Handle the case where there are no widgets or an empty widget
+			throw new Error('No widget or empty widget found.');
+		}
+
+		res.status(200).json(widget.children);
+	} catch (err) {
+		console.error('Error fetching Figma file:', err);
+		res.status(500).json({ error: 'Error fetching Figma file', message: err.message });
+	}
 }
-
