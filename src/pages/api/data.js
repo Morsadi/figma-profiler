@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 			throw new Error('No widget or empty widget found.');
 		}
 
-		res.status(200).json(widget.children);
+		res.status(200).json(data);
 	} catch (err) {
 		console.error('Error fetching Figma file:', err);
 		res.status(500).json({ error: 'Error fetching Figma file', message: err.message });
