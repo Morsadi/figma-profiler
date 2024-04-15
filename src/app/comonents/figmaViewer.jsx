@@ -1,18 +1,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaAngleRight } from 'react-icons/fa'; // Importing arrow icon
+import { FaPlus, FaShapes } from 'react-icons/fa';
+import { LuFrame } from 'react-icons/lu';
+import { BsVectorPen } from 'react-icons/bs';
+
+import hljs from 'highlight.js/lib/core';
+import 'highlight.js/styles/base16/ashes.css';
 import styles from '../styles/Viewer.module.css';
-import StylesPreview from './stylesPreview'
+import StylesPreview from './stylesPreview';
+import css from 'highlight.js/lib/languages/css';
+
+// Register the CSS language
+hljs.registerLanguage('css', css);
 
 const FigmaViewer = ({ fileKey }) => {
 	const [data, setData] = useState(null);
 	const [currentNode, setCurrentNode] = useState({});
-	const [currentStyle, setCurrentStyle] = useState({});
+	const [currentStyle, setCurrentStyle] = useState(null);
 	const [path, setPath] = useState([]);
 
 	useEffect(() => {
 		fetchData();
+		hljs.highlightAll();
 	}, []);
 
 	const fetchData = async () => {
@@ -34,7 +44,11 @@ const FigmaViewer = ({ fileKey }) => {
 	const handleNodeClick = (node) => {
 		setCurrentNode(node);
 		setPath([...path, node]);
-        setCurrentStyle({})
+		setCurrentStyle(null);
+	};
+
+	const truncateTextAt = (text, length) => {
+		return text.length <= length ? text : text.slice(0, length) + '…';
 	};
 
 	const handleTextClick = (node, updatePath) => {
@@ -44,10 +58,11 @@ const FigmaViewer = ({ fileKey }) => {
 				// Trim the path to include only nodes up to the clicked node
 				setPath(path.slice(0, index + 1));
 				setCurrentNode(node);
+				setCurrentStyle(null);
 			}
-
 		} else {
-			setCurrentStyle(node.style);
+			node.style ? setCurrentStyle(node.style) : setCurrentStyle(node.styles);
+			console.log(node);
 		}
 	};
 
@@ -59,31 +74,50 @@ const FigmaViewer = ({ fileKey }) => {
 			setCurrentNode(previousNode); // Set the current node to the previous node
 			setPath(newPath); // Update the path
 		}
-        setCurrentStyle({})
+		setCurrentStyle(null);
 	};
 
-
 	return (
-		<div>
+		<>
 			{data ? (
-				<div>
+				<div className={styles.container}>
+					<nav className={styles.breadcrumb}>
+						{path.map((node, index) => (
+							<span
+								key={node.id}
+								onClick={() => handleTextClick(node, true)}>
+								{index > 0 && <span> / </span>} {/* Render separator if not first node */}
+								{node.name}
+							</span>
+						))}
+					</nav>
 					<div className={styles.navigation}>
-						<nav className={styles.breadcrumb}>
-							{path.map((node, index) => (
-								<span key={node.id} onClick={() => handleTextClick(node, true)}>
-									{index > 0 && <span> / </span>} {/* Render separator if not first node */}
-									{node.name}
-								</span>
-							))}
-						</nav>
 						<ul>
 							{currentNode && currentNode.children ? (
 								currentNode.children.map((child) => (
-									<li key={child.id}>
+									<li
+										data-type={child.type}
+										data-children={!!child.children}
+										className={styles.type}
+										key={child.id}
+										tooltip={child.type}>
+										{child.type === 'FRAME' && <LuFrame />}
+										{child.type === 'VECTOR' && <BsVectorPen />}
+										{child.type === 'RECTANGLE' && <FaShapes />}
+										<span
+											onClick={
+												child.children
+													? () => handleNodeClick(child)
+													: () => handleTextClick(child, false)
+											}>
+											{truncateTextAt(child.name, 120)}
+										</span>{' '}
 										{child.children ? ( // Render arrow icon if children exist
-											<FaAngleRight onClick={() => handleNodeClick(child)} />
+											<FaPlus
+												className={styles.arrow}
+												onClick={() => handleNodeClick(child)}
+											/>
 										) : null}
-										<span onClick={() => handleTextClick(child, false)}>{child.name}</span>{' '}
 										{/* Render text separately */}
 									</li>
 								))
@@ -91,14 +125,14 @@ const FigmaViewer = ({ fileKey }) => {
 								<li>No children available.</li>
 							)}
 						</ul>
-						<button onClick={handleGoBack}>Go Back</button>
+						{/* <button onClick={handleGoBack}>Go Back</button> */}
 					</div>
-                    <StylesPreview currentStyle={currentStyle}/>
+					{currentStyle && <StylesPreview currentStyle={currentStyle} />}
 				</div>
 			) : (
 				<p>Loading...</p>
 			)}
-		</div>
+		</>
 	);
 };
 

@@ -1,3 +1,104 @@
-.breadcrumb h2 {
-	color: red;
+.container {
+	display: grid;
+	grid-template-columns: 1fr 0.9fr; /* Adjust column widths as needed */
+	align-items: start;
+	gap: 20px;
+	padding: 1rem;
+	border-radius: 4px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	background-color: #fff;
+	width: 100%;
+	max-width: 1000px;
+	margin-inline: auto;
+}
+
+.container pre {
+	min-height: 200px;
+	background-color: #f5f5f5;
+	padding: 1rem;
+	border-radius: 4px;
+}
+
+/* Navigation Styles */
+.navigation {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	max-height: 70vh;
+	overflow: hidden;
+	overflow-y: auto;
+}
+
+.breadcrumb {
+	display: flex;
+	align-items: center;
+	margin-bottom: 1rem;
+	grid-column: span 2;
+}
+
+.breadcrumb span {
+	margin-right: 5px;
+	color: #000;
+	font-size: 14px;
+	cursor: pointer;
+	opacity: 0.6;
+	text-transform: capitalize;
+}
+.breadcrumb span:hover,
+.breadcrumb span:last-child {
+	opacity: 1;
+}
+
+.navigation ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.navigation li {
+	margin-bottom: 12px;
+	position: relative;
+	width: fit-content;
+	font-size: 0.9rem;
+}
+
+.navigation li::first-letter {
+	text-transform: capitalize;
+}
+.navigation li[data-children='true'] {
+	font-weight: 600;
+}
+.navigation li[data-children='true'] > svg:last-child {
+	width: 10px;
+	height: auto;
+}
+
+.navigation li:hover {
+	cursor: pointer;
+	background-color: #f5f5f5;
+}
+
+/* Navigation Icons */
+.navigation li.type:after {
+	pointer-events: none;
+	font-weight: 900;
+	font-family: cursive;
+	font-size: 13px;
+	background: red;
+	color: #fff;
+	display: inline-grid;
+	place-items: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 2em;
+	scale: 0.7;
+	transform-origin: left;
+}
+.navigation li[data-type='TEXT']:after {
+	content: 'T';
+}
+
+.navigation li svg:not(.arrow) {
+	font-size: 0.7rem;
+	margin-right: 6px;
 }
