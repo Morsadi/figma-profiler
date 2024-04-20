@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 		personalAccessToken: process.env.ACCESS_TOKEN,
 	});
 
-	const fileKey = 'eG9oxCYlvvYWDraiQUzalz'; // should be in the URL
+	const fileKey = process.env.FILE_KEY; // should be in the URL
 
 	try {
 		const file = await client.file(fileKey);
