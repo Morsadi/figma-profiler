@@ -19,13 +19,21 @@ Figma Profiler is a tool designed to streamline the process of managing design a
 1. Create a .env file in the root directory of the project.
 2. Add the following environment variables to the .env file:
 
+         CLIENT_NAME=
+         ACCESS_TOKEN=(`Found in your figma account`)
+         FILE_KEY=(`Found in the link: e.g, eG9oxCYlvvYWDraiQUzalz`)
+         CLIENTS_FOLDER_PATH=
+
+   You can try test file
+   
    ```bash
-   CLIENT_NAME=
-   ACCESS_TOKEN=(`Found in your figma account`)
-   FILE_KEY=(`Found in the link: e.g, eG9oxCYlvvYWDraiQUzalz`)
-   CLIENTS_FOLDER_PATH=
+   CLIENT_NAME=amarillo-redesign
+   ACCESS_TOKEN=figd_O3U7Qc28HhkBKo1ix44wXEzcrir-8HVlKh0BZquI
+   FILE_KEY=eG9oxCYlvvYWDraiQUzalz
+   CLIENTS_FOLDER_PATH=C:\cms30\nodeServer\clients\
+   ```
 
 ### Starting the Application
-To start the Figma Profiler application, run the following command:
-   ```bash
+   To start the Figma Profiler application, run the following command:
+     
       npm run dev
