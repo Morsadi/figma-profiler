@@ -41,16 +41,25 @@ export default function handler(req, res) {
 		const lineHeight = extractStylesFromPrefix(variablesContent, '--leading-');
 		const colors = extractColorsFromSwatches(swatchesContent);
 
+		const anyEmpty = [fontFamily, fontSizes, letterSpacing, lineHeight, colors].some((arr) => !arr.length);
+		if (anyEmpty) return res.status(404).json({ error: 'No variables found for this client' });
+
 		return res.status(200).send({
 			fontFamily,
 			fontSizes,
 			letterSpacing,
 			lineHeight,
 			colors,
+			clientName: clientName.replace(/-redesign$/, ''),
+            anyEmpty
 		});
 	} catch (error) {
 		console.error(error);
-		return res.status(500).json({ error: 'Failed to read variables file' });
+		return res
+			.status(500)
+			.json({
+				error: 'Failed to read variables and/or swatches files. Please check the files are present and the path is correct.',
+			});
 	}
 }
 

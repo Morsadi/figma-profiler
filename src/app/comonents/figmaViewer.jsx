@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaShapes } from 'react-icons/fa';
+import { FaPlus, FaCheck } from 'react-icons/fa';
 import { LuFrame } from 'react-icons/lu';
-import { BsVectorPen } from 'react-icons/bs';
+import { IoShieldCheckmarkSharp } from 'react-icons/io5';
 
 import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/base16/ashes.css';
@@ -33,6 +33,7 @@ const FigmaViewer = ({ fileKey }) => {
 			setData(initialData);
 			setCurrentNode(initialData.document.children[0]); // Setting initial node
 			setPath([initialData.document.children[0]]); // Initialize path with initial node
+			// Limiting initial node to page 1 only. For faster uploads
 		} catch (error) {
 			console.error('Error fetching data:', error);
 		}
@@ -190,6 +191,15 @@ const FigmaViewer = ({ fileKey }) => {
 		<>
 			{data ? (
 				<div className={styles.container}>
+					<div className={styles.tooltip}>
+						{variables?.clientName && (
+							<span>
+								<IoShieldCheckmarkSharp data-uploaded={variables?.anyEmpty ? 'false' : 'true'} />
+								{variables.clientName} Variables
+							</span>
+						)}
+					</div>
+
 					<nav className={styles.breadcrumb}>
 						{path.map((node, index) => (
 							<span
@@ -203,36 +213,33 @@ const FigmaViewer = ({ fileKey }) => {
 					<div className={styles.navigation}>
 						<ul>
 							{currentNode && currentNode.children ? (
-								currentNode.children
-									.map((child) => (
-										<li
-											data-type={child.type}
-											data-children={!!child.children}
-											data-active={child.id === activeNodeId}
-											className={styles.type}
-											key={child.id}
-											tooltip={child.type}>
-											{child.type === 'FRAME' && <LuFrame />}
-											{child.type === 'VECTOR' && <BsVectorPen />}
-											{child.type === 'RECTANGLE' && <FaShapes />}
-											<span
-												onClick={
-													child.children
-														? () => handleNodeClick(child)
-														: () => handleTextClick(child, false)
-												}>
-												{truncateTextAt(child.name, 120)}
-											</span>{' '}
-											{child.children ? ( // Render arrow icon if children exist
-												<FaPlus
-													className={styles.arrow}
-													onClick={() => handleNodeClick(child)}
-												/>
-											) : null}
-										</li>
-									))
-									.reverse()
+								currentNode.children.map((child) => (
+									<li
+										data-type={child.type}
+										data-children={!!child.children}
+										data-active={child.id === activeNodeId}
+										className={styles.type}
+										key={child.id}
+										onClick={
+											child.children
+												? () => handleNodeClick(child)
+												: () => handleTextClick(child, false)
+										}
+										tooltip={child.type}>
+										{child.type !== 'TEXT' && <LuFrame />}
+										{/* {child.type === 'VECTOR' && <BsVectorPen />}
+											{child.type === 'RECTANGLE' && <FaShapes />} */}
+										<span>{truncateTextAt(child.name, 60)}</span>{' '}
+										{child.children ? ( // Render arrow icon if children exist
+											<FaPlus
+												className={styles.arrow}
+												onClick={() => handleNodeClick(child)}
+											/>
+										) : null}
+									</li>
+								))
 							) : (
+								// .reverse()
 								<li>No children available.</li>
 							)}
 						</ul>

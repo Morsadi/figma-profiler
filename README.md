@@ -1,2 +1,31 @@
-# figma-profiler
- 
+## Figma Profiler
+
+### Overview
+Figma Profiler is a tool designed to streamline the process of managing design assets and variables within Figma. This README provides a step-by-step guide to setting up and running the Figma Profiler application.
+
+### Installation
+1. Clone the repository.
+   
+   ```bash
+   git clone https://github.com/your-username/figma-profiler.git
+   cd figma-profiler```
+
+2. Install dependencies using npm.
+
+   ```bash
+   npm install
+
+### Configuration
+1. Create a .env file in the root directory of the project.
+2. Add the following environment variables to the .env file:
+
+   ```bash
+   CLIENT_NAME=
+   ACCESS_TOKEN=(`Found in your figma account`)
+   FILE_KEY=(`Found in the link: e.g, eG9oxCYlvvYWDraiQUzalz`)
+   CLIENTS_FOLDER_PATH=
+
+### Starting the Application
+To start the Figma Profiler application, run the following command:
+   ```bash
+      npm run dev
