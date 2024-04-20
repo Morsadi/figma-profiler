@@ -8,7 +8,7 @@ Figma Profiler is a tool designed to streamline the process of managing design a
    
    ```bash
    git clone https://github.com/your-username/figma-profiler.git
-   cd figma-profiler```
+   cd figma-profiler
 
 2. Install dependencies using npm.
 
