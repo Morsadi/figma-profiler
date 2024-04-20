@@ -62,6 +62,10 @@
 	font-size: 0.9rem;
 }
 
+.navigation li[data-active="true"] {
+	font-weight: 600;
+}	
+
 .navigation li::first-letter {
 	text-transform: capitalize;
 }

@@ -16,9 +16,11 @@ hljs.registerLanguage('css', css);
 
 const FigmaViewer = ({ fileKey }) => {
 	const [data, setData] = useState(null);
+	const [variables, setVariables] = useState(null);
 	const [currentNode, setCurrentNode] = useState({});
 	const [currentStyle, setCurrentStyle] = useState(null);
 	const [path, setPath] = useState([]);
+	const [activeNodeId, setActiveNodeId] = useState(null);
 
 	useEffect(() => {
 		fetchData();
@@ -27,31 +29,64 @@ const FigmaViewer = ({ fileKey }) => {
 
 	const fetchData = async () => {
 		try {
-			const initialData = await fetchInitialData(fileKey);
+			const initialData = await fetchInitialData();
 			setData(initialData);
 			setCurrentNode(initialData.document.children[0]); // Setting initial node
 			setPath([initialData.document.children[0]]); // Initialize path with initial node
 		} catch (error) {
 			console.error('Error fetching data:', error);
 		}
+
+		try {
+			const initialVariables = await fetchInitialVariables();
+			setVariables(initialVariables);
+		} catch (error) {
+			console.error('Error fetching variables:', error);
+		}
 	};
 
-	const fetchInitialData = async (fileKey) => {
+	const fetchInitialData = async () => {
 		const response = await fetch(`/api/data`);
 		return response.json();
 	};
+	const fetchInitialVariables = async () => {
+		const response = await fetch(`/api/variables`);
+		return response.json();
+	};
 
-	const handleNodeClick = (node) => {
+	function findMatchingVariable(value, array) {
+		const match = array.find(([variable, variableValue]) => variableValue === value);
+
+		return match ? `var(${match[0]})` : value;
+	}
+	function findMatchingFontVariable(fontFamily, array) {
+		if (!array) {
+			throw new Error('array is null');
+		}
+		let result = fontFamily;
+		try {
+			array.forEach(([prop, value]) => {
+				if (value && value.indexOf(fontFamily) !== -1) {
+					result = `var(${prop})`;
+				}
+			});
+		} catch (error) {
+			console.error('Error finding matching font variable:', error);
+		}
+		return result;
+	}
+
+	function handleNodeClick(node) {
 		setCurrentNode(node);
 		setPath([...path, node]);
 		setCurrentStyle(null);
-	};
+	}
 
-	const truncateTextAt = (text, length) => {
+	function truncateTextAt(text, length) {
 		return text.length <= length ? text : text.slice(0, length) + '…';
-	};
+	}
 
-	const handleTextClick = (node, updatePath) => {
+	function handleTextClick(node, updatePath) {
 		if (updatePath) {
 			const index = path.findIndex((item) => item.id === node.id);
 			if (index !== -1) {
@@ -60,21 +95,95 @@ const FigmaViewer = ({ fileKey }) => {
 				setCurrentNode(node);
 				setCurrentStyle(null);
 			}
+			setActiveNodeId(null);
 		} else {
-			node.style ? setCurrentStyle(node.style) : setCurrentStyle(node.styles);
-			console.log(node);
+			node.style ? setCurrentStyle(extractTextProps(node)) : setCurrentStyle(node.styles);
+			setActiveNodeId(node.id);
 		}
-	};
+	}
 
-	const handleGoBack = () => {
-		if (path.length > 1) {
-			const newPath = [...path];
-			newPath.pop(); // Remove the current node from the path
-			const previousNode = newPath[newPath.length - 1]; // Get the previous node
-			setCurrentNode(previousNode); // Set the current node to the previous node
-			setPath(newPath); // Update the path
+	function fontSizeToRems(fontSize) {
+		let initialFontSize = `${fontSize / 16}rem`;
+
+		return findMatchingVariable(initialFontSize, variables.fontSizes);
+	}
+
+	function letterSpeceToEm(fontSizeInPX, letterSpacingInPx) {
+		if (!variables || !variables.letterSpacing) {
+			console.error('Variables are not yet loaded');
+			return `${Math.round((letterSpacingInPx / fontSizeInPX) * 1000) / 1000}em`;
 		}
-		setCurrentStyle(null);
+
+		const initialLetterSpacing = Math.round((letterSpacingInPx / fontSizeInPX) * 1000) / 1000;
+
+		return (
+			findMatchingVariable(`${initialLetterSpacing}em`, variables.letterSpacing) || `${initialLetterSpacing}em`
+		);
+	}
+
+	function lineHeightPxToEm(lineHeightInPx) {
+		if (!variables || !variables.lineHeight) {
+			console.error('Variables are not yet loaded');
+			return `${parseFloat((lineHeightInPx / 100).toFixed(3))}`;
+		}
+
+		const initialLineHeight = `${parseFloat((lineHeightInPx / 100).toFixed(3))}`;
+		return findMatchingVariable(initialLineHeight, variables.lineHeight);
+	}
+
+	function fontFamilyToVariable(fontFamily) {
+		if (!variables || !variables.fontFamily) {
+			console.error('Variables are not yet loaded');
+			return fontFamily;
+		}
+
+		return findMatchingFontVariable(fontFamily.toLowerCase(), variables.fontFamily);
+	}
+
+	function rgbToHex({ r, g, b }) {
+		return `#${[r, g, b]
+			.map((c) =>
+				Math.round(c * 255)
+					.toString(16)
+					.padStart(2, '0')
+			)
+			.join('')}`;
+	}
+
+	const extractTextProps = (node) => {
+		const { style } = node;
+		const props = {};
+
+		const fontSize = parseFloat(style.fontSize);
+		const letterSpacing = parseFloat(style.letterSpacing);
+		const lineHeight = parseFloat(style.lineHeightPercentFontSize);
+		const fontWeight = parseFloat(style.fontWeight);
+
+		if (style.fontFamily) {
+			props['font-family'] = fontFamilyToVariable(style.fontFamily);
+		}
+
+		if (!isNaN(fontWeight)) {
+			props['font-weight'] = fontWeight;
+		}
+
+		if (node.fills[0]?.color) {
+			props['color'] = findMatchingVariable(rgbToHex(node.fills[0].color), variables.colors);
+		}
+
+		if (!isNaN(fontSize)) {
+			props['font-size'] = fontSizeToRems(fontSize);
+		}
+
+		if (!isNaN(letterSpacing) && letterSpacing !== 0) {
+			props['letter-spacing'] = letterSpeceToEm(fontSize, letterSpacing);
+		}
+
+		if (!isNaN(lineHeight) && lineHeight !== 0) {
+			props['line-height'] = lineHeightPxToEm(lineHeight);
+		}
+
+		return props;
 	};
 
 	return (
@@ -94,33 +203,35 @@ const FigmaViewer = ({ fileKey }) => {
 					<div className={styles.navigation}>
 						<ul>
 							{currentNode && currentNode.children ? (
-								currentNode.children.map((child) => (
-									<li
-										data-type={child.type}
-										data-children={!!child.children}
-										className={styles.type}
-										key={child.id}
-										tooltip={child.type}>
-										{child.type === 'FRAME' && <LuFrame />}
-										{child.type === 'VECTOR' && <BsVectorPen />}
-										{child.type === 'RECTANGLE' && <FaShapes />}
-										<span
-											onClick={
-												child.children
-													? () => handleNodeClick(child)
-													: () => handleTextClick(child, false)
-											}>
-											{truncateTextAt(child.name, 120)}
-										</span>{' '}
-										{child.children ? ( // Render arrow icon if children exist
-											<FaPlus
-												className={styles.arrow}
-												onClick={() => handleNodeClick(child)}
-											/>
-										) : null}
-										{/* Render text separately */}
-									</li>
-								))
+								currentNode.children
+									.map((child) => (
+										<li
+											data-type={child.type}
+											data-children={!!child.children}
+											data-active={child.id === activeNodeId}
+											className={styles.type}
+											key={child.id}
+											tooltip={child.type}>
+											{child.type === 'FRAME' && <LuFrame />}
+											{child.type === 'VECTOR' && <BsVectorPen />}
+											{child.type === 'RECTANGLE' && <FaShapes />}
+											<span
+												onClick={
+													child.children
+														? () => handleNodeClick(child)
+														: () => handleTextClick(child, false)
+												}>
+												{truncateTextAt(child.name, 120)}
+											</span>{' '}
+											{child.children ? ( // Render arrow icon if children exist
+												<FaPlus
+													className={styles.arrow}
+													onClick={() => handleNodeClick(child)}
+												/>
+											) : null}
+										</li>
+									))
+									.reverse()
 							) : (
 								<li>No children available.</li>
 							)}
