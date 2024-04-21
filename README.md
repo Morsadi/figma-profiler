@@ -7,7 +7,7 @@ Figma Profiler is a tool designed to streamline the process of managing design a
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/figma-profiler.git
+    git clone https://github.com/Morsadi/figma-profiler.git
     cd figma-profiler
     ```
 
