@@ -56,6 +56,11 @@ const FigmaViewer = ({ fileKey }) => {
 	};
 
 	function findMatchingVariable(value, array) {
+
+		if (!array) {
+			return value;
+		}
+
 		const match = array.find(([variable, variableValue]) => variableValue === value);
 
 		return match ? `var(${match[0]})` : value;
@@ -192,12 +197,10 @@ const FigmaViewer = ({ fileKey }) => {
 			{data ? (
 				<div className={styles.container}>
 					<div className={styles.tooltip}>
-						{variables?.clientName && (
-							<span>
-								<IoShieldCheckmarkSharp data-uploaded={variables?.anyEmpty ? 'false' : 'true'} />
-								{variables.clientName} Variables
-							</span>
-						)}
+						<span data-uploaded={variables ? false : true}>
+							<IoShieldCheckmarkSharp />
+							{variables?.clientName || 'Client'} Variables
+						</span>
 					</div>
 
 					<nav className={styles.breadcrumb}>

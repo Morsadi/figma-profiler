@@ -6,7 +6,6 @@ export default async function handler(req, res) {
 	});
 
 	const fileKey = process.env.FILE_KEY; // should be in the URL
-
 	try {
 		const file = await client.file(fileKey);
 		const { data = {} } = file;
