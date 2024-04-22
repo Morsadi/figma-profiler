@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaCheck } from 'react-icons/fa';
 import { LuFrame } from 'react-icons/lu';
 import { IoShieldCheckmarkSharp } from 'react-icons/io5';
+import axios from 'axios';
+
 
 import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/base16/ashes.css';
@@ -47,13 +49,25 @@ const FigmaViewer = ({ fileKey }) => {
 	};
 
 	const fetchInitialData = async () => {
-		const response = await fetch(`/api/data`);
-		return response.json();
+		try {
+			const response = await axios.get(`/api/data`, { rejectUnauthorized: false });
+			return response.data;
+		} catch (error) {
+			console.error('Error fetching data:', error);
+			throw error; // Ensure error is propagated
+		}
 	};
+	
 	const fetchInitialVariables = async () => {
-		const response = await fetch(`/api/variables`);
-		return response.json();
+		try {
+			const response = await axios.get(`/api/variables`, { rejectUnauthorized: false });
+			return response.data;
+		} catch (error) {
+			console.error('Error fetching variables:', error);
+			throw error; // Ensure error is propagated
+		}
 	};
+	
 
 	function findMatchingVariable(value, array) {
 		if (!array) {
