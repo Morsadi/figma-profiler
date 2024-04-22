@@ -56,7 +56,6 @@ const FigmaViewer = ({ fileKey }) => {
 	};
 
 	function findMatchingVariable(value, array) {
-
 		if (!array) {
 			return value;
 		}
@@ -196,12 +195,14 @@ const FigmaViewer = ({ fileKey }) => {
 		<>
 			{data ? (
 				<div className={styles.container}>
-					<div className={styles.tooltip}>
-						<span data-uploaded={variables ? false : true}>
-							<IoShieldCheckmarkSharp />
-							{variables?.clientName || 'Client'} Variables
-						</span>
-					</div>
+					{variables && (
+						<div className={styles.tooltip}>
+							<span data-uploaded={variables.error ? false : true}>
+								<IoShieldCheckmarkSharp />
+								{variables?.clientName || 'Client'} Variables
+							</span>
+						</div>
+					)}
 
 					<nav className={styles.breadcrumb}>
 						{path.map((node, index) => (
