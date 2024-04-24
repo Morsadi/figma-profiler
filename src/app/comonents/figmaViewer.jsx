@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaCheck } from 'react-icons/fa';
 import { LuFrame } from 'react-icons/lu';
 import { IoShieldCheckmarkSharp } from 'react-icons/io5';
-import axios from 'axios';
-
 
 import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/base16/ashes.css';
@@ -25,49 +23,31 @@ const FigmaViewer = ({ fileKey }) => {
 	const [activeNodeId, setActiveNodeId] = useState(null);
 
 	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
+				setData(data);
+				setVariables(variables); // Update variables state
+				setCurrentNode(data.document.children[0]); // Setting initial node
+				setPath([data.document.children[0]]); // Initialize path with initial node
+			} catch (error) {
+				console.error('Error fetching data:', error);
+			} finally {
+				hljs.highlightAll(); 
+			}
+		};
+
 		fetchData();
-		hljs.highlightAll();
 	}, []);
 
-	const fetchData = async () => {
-		try {
-			const initialData = await fetchInitialData();
-			setData(initialData);
-			setCurrentNode(initialData.document.children[0]); // Setting initial node
-			setPath([initialData.document.children[0]]); // Initialize path with initial node
-			// Limiting initial node to page 1 only. For faster uploads
-		} catch (error) {
-			console.error('Error fetching data:', error);
-		}
-
-		try {
-			const initialVariables = await fetchInitialVariables();
-			setVariables(initialVariables);
-		} catch (error) {
-			console.error('Error fetching variables:', error);
-		}
-	};
-
 	const fetchInitialData = async () => {
-		try {
-			const response = await axios.get(`/api/data`, { rejectUnauthorized: false });
-			return response.data;
-		} catch (error) {
-			console.error('Error fetching data:', error);
-			throw error; // Ensure error is propagated
-		}
+		const response = await fetch(`/api/data`);
+		return response.json();
 	};
-	
 	const fetchInitialVariables = async () => {
-		try {
-			const response = await axios.get(`/api/variables`, { rejectUnauthorized: false });
-			return response.data;
-		} catch (error) {
-			console.error('Error fetching variables:', error);
-			throw error; // Ensure error is propagated
-		}
+		const response = await fetch(`/api/variables`);
+		return response.json();
 	};
-	
 
 	function findMatchingVariable(value, array) {
 		if (!array) {
