@@ -29,11 +29,11 @@ Figma Profiler is a tool designed to streamline the process of managing design a
     CLIENTS_FOLDER_PATH=
     ```
 
-    You can try test file:
+    Example
 
     ```bash
     CLIENT_NAME=amarillo-redesign
-    ACCESS_TOKEN=figd_O3U7Qc28HhkBKo1ix44wXEzcrir-8HVlKh0BZquI
+    ACCESS_TOKEN=figd_6Pwt0P3Xe9_l3A8p4_Gmd3DmjotN3Vrptc_BTgDf
     FILE_KEY=eG9oxCYlvvYWDraiQUzalz
     CLIENTS_FOLDER_PATH=C:\cms30\nodeServer\clients\
     ```
