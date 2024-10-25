@@ -3,7 +3,9 @@
 import fs from 'fs';
 
 export default function handler(req, res) {
-	const clientName = process.env.CLIENT_NAME;
+	const { clientName } =  req.body;
+
+	// const clientName = process.env.CLIENT_NAME;
 	const clientsFolderPath = process.env.CLIENTS_FOLDER_PATH;
 
 	if (!clientName) {
@@ -15,10 +17,14 @@ export default function handler(req, res) {
 	}
 
 	const clientFolderPath = `${clientsFolderPath}/${clientName}/sites/primary/node_modules/plugins_extended/common/virtuals/css`;
+	// const clientFolderPath = `${clientsFolderPath}/${clientName}/node_modules/plugins_extended/common/virtuals/css`;
 
 	if (!fs.existsSync(clientFolderPath)) {
 		return res.status(404).json({ error: 'Client folder not found' });
 	}
+
+	console.log(clientsFolderPath);
+	
 
 	const variablesPath = `${clientFolderPath}/variables.css`;
 	const swatchesPath = `${clientFolderPath}/swatches.css`;
@@ -39,7 +45,7 @@ export default function handler(req, res) {
 		const fontSizes = extractStylesFromPrefix(variablesContent, '--text-');
 		const letterSpacing = extractStylesFromPrefix(variablesContent, '--tracking-');
 		const lineHeight = extractStylesFromPrefix(variablesContent, '--leading-');
-		const colors = extractColorsFromSwatches(swatchesContent);
+		const colors = extractColorsFromSwatches(variablesContent);
 
 		const anyEmpty = [fontFamily, fontSizes, letterSpacing, lineHeight, colors].some((arr) => !arr.length);
 		if (anyEmpty) return res.status(404).json({ error: 'No variables found for this client' });
@@ -50,7 +56,7 @@ export default function handler(req, res) {
 			letterSpacing,
 			lineHeight,
 			colors,
-			clientName: clientName.replace(/-redesign$/, ''),
+			clientName,
             anyEmpty
 		});
 	} catch (error) {
@@ -69,7 +75,7 @@ function extractStylesFromPrefix(cssContent, stylePrefix) {
 		.map((line) => line.trim())
 		.filter((line) => line.startsWith(stylePrefix))
 		.map((line) => line.split(/:\s*/).map((part) => part.trim()))
-		.map(([variableName, value]) => [variableName, value.toLowerCase().replace(';', '')]);
+		.map(([variableName, value]) => [variableName, value?.toLowerCase().replace(';', '')]);
 }
 
 function extractColorsFromSwatches(swatchesContent, stylePrefix = '--') {
@@ -78,5 +84,5 @@ function extractColorsFromSwatches(swatchesContent, stylePrefix = '--') {
 		.map((line) => line.trim())
 		.filter((line) => line.startsWith(stylePrefix) && !line.startsWith('--sw'))
 		.map((line) => line.split(/:\s*/).map((part) => part.trim()))
-		.map(([variableName, value]) => [variableName, value.toLowerCase().replace(';', '')]);
+		.map(([variableName, value]) => [variableName, value?.toLowerCase().replace(';', '')]);
 }

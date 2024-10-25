@@ -21,31 +21,51 @@ const FigmaViewer = ({ fileKey }) => {
 	const [currentStyle, setCurrentStyle] = useState(null);
 	const [path, setPath] = useState([]);
 	const [activeNodeId, setActiveNodeId] = useState(null);
+	const [clientName, setClientName] = useState('');
 
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
-				setData(data);
-				setVariables(variables); // Update variables state
-				setCurrentNode(data.document.children[0]); // Setting initial node
-				setPath([data.document.children[0]]); // Initialize path with initial node
-			} catch (error) {
-				console.error('Error fetching data:', error);
-			} finally {
-				hljs.highlightAll(); 
-			}
-		};
-
-		fetchData();
+		// const fetchData = async () => {
+		// 	try {
+		// 		const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
+		// 		setData(data);
+		// 		setVariables(variables); // Update variables state
+		// 		setCurrentNode(data.document.children[0]); // Setting initial node
+		// 		setPath([data.document.children[0]]); // Initialize path with initial node
+		// 	} catch (error) {
+		// 		console.error('Error fetching data:', error);
+		// 	} finally {
+		// 		hljs.highlightAll();
+		// 	}
+		// };
+		// fetchData();
 	}, []);
 
+	const fetchData = async () => {
+		try {
+			const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
+			setData(data);
+			setVariables(variables); // Update variables state
+			setCurrentNode(data.document.children[0]); // Setting initial node
+			setPath([data.document.children[0]]); // Initialize path with initial node
+		} catch (error) {
+			console.error('Error fetching data:', error);
+		} finally {
+			hljs.highlightAll();
+		}
+	};
 	const fetchInitialData = async () => {
 		const response = await fetch(`/api/data`);
 		return response.json();
 	};
 	const fetchInitialVariables = async () => {
-		const response = await fetch(`/api/variables`);
+		const response = await fetch(`/api/variables`, {
+			method: 'POST',
+			headers: {
+				'Content-type': 'application/json',
+			},
+			body: JSON.stringify({ clientName }),
+		});
+
 		return response.json();
 	};
 
@@ -158,6 +178,8 @@ const FigmaViewer = ({ fileKey }) => {
 		const lineHeight = parseFloat(style.lineHeightPercentFontSize);
 		const fontWeight = parseFloat(style.fontWeight);
 
+		console.log(style);
+
 		if (style.fontFamily) {
 			props['font-family'] = fontFamilyToVariable(style.fontFamily);
 		}
@@ -182,18 +204,30 @@ const FigmaViewer = ({ fileKey }) => {
 			props['line-height'] = lineHeightPxToEm(lineHeight);
 		}
 
+		if (style.textCase === 'UPPER') {
+			props['text-transform'] = 'uppercase';
+		}
+
 		return props;
 	};
 
 	return (
 		<>
+			<div>
+				<input
+					placeholder='Client Name'
+					onChange={setClientName}
+					type='text'
+				/>
+				<button>Find</button>
+			</div>
 			{data ? (
 				<div className={styles.container}>
 					{variables && (
 						<div className={styles.tooltip}>
 							<span data-uploaded={variables.error ? false : true}>
 								<IoShieldCheckmarkSharp />
-								{variables?.clientName || 'Client'} Variables
+								{variables?.clientName} Variables
 							</span>
 						</div>
 					)}
