@@ -3,7 +3,7 @@
 import fs from 'fs';
 
 export default function handler(req, res) {
-	const { clientName } =  req.body;
+	const { clientName, areColorsInSwatches} =  req.body;
 
 	// const clientName = process.env.CLIENT_NAME;
 	const clientsFolderPath = process.env.CLIENTS_FOLDER_PATH;
@@ -16,7 +16,9 @@ export default function handler(req, res) {
 		return res.status(500).json({ error: 'Clients folder path not configured' });
 	}
 
+	// If stored under primary instead of global folder
 	const clientFolderPath = `${clientsFolderPath}/${clientName}/sites/primary/node_modules/plugins_extended/common/virtuals/css`;
+	// Multi language
 	// const clientFolderPath = `${clientsFolderPath}/${clientName}/node_modules/plugins_extended/common/virtuals/css`;
 
 	if (!fs.existsSync(clientFolderPath)) {
@@ -45,7 +47,7 @@ export default function handler(req, res) {
 		const fontSizes = extractStylesFromPrefix(variablesContent, '--text-');
 		const letterSpacing = extractStylesFromPrefix(variablesContent, '--tracking-');
 		const lineHeight = extractStylesFromPrefix(variablesContent, '--leading-');
-		const colors = extractColorsFromSwatches(variablesContent);
+		const colors = extractColorsFromSwatches(areColorsInSwatches ? swatchesContent : variablesContent);
 
 		const anyEmpty = [fontFamily, fontSizes, letterSpacing, lineHeight, colors].some((arr) => !arr.length);
 		if (anyEmpty) return res.status(404).json({ error: 'No variables found for this client' });

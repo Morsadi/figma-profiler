@@ -21,7 +21,20 @@ const FigmaViewer = ({ fileKey }) => {
 	const [currentStyle, setCurrentStyle] = useState(null);
 	const [path, setPath] = useState([]);
 	const [activeNodeId, setActiveNodeId] = useState(null);
-	const [clientName, setClientName] = useState('');
+	const [clientName, setClientName] = useState(() => {
+		const storedClientName = localStorage.getItem('clientName');
+		return storedClientName || 'dayton-redesign';
+	});
+
+	const [areColorsInSwatches, setAreColorsInSwatches] = useState(() => {
+		const storedAreColorsInSwatches = localStorage.getItem('areColorsInSwatches');
+		return storedAreColorsInSwatches ? JSON.parse(storedAreColorsInSwatches) : false;
+	});
+
+	useEffect(() => {
+		localStorage.setItem('clientName', clientName);
+		localStorage.setItem('areColorsInSwatches', JSON.stringify(areColorsInSwatches));
+	}, [clientName, areColorsInSwatches]);
 
 	useEffect(() => {
 		// const fetchData = async () => {
@@ -37,10 +50,15 @@ const FigmaViewer = ({ fileKey }) => {
 		// 		hljs.highlightAll();
 		// 	}
 		// };
-		// fetchData();
+		fetchData();
 	}, []);
 
 	const fetchData = async () => {
+			// setData(null);
+			// setVariables(null);
+			// setCurrentNode(null);
+			// setPath([]);
+
 		try {
 			const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
 			setData(data);
@@ -63,7 +81,7 @@ const FigmaViewer = ({ fileKey }) => {
 			headers: {
 				'Content-type': 'application/json',
 			},
-			body: JSON.stringify({ clientName }),
+			body: JSON.stringify({ clientName, areColorsInSwatches }),
 		});
 
 		return response.json();
@@ -189,7 +207,15 @@ const FigmaViewer = ({ fileKey }) => {
 		}
 
 		if (node.fills[0]?.color) {
-			props['color'] = findMatchingVariable(rgbToHex(node.fills[0].color), variables.colors);
+			let color = rgbToHex(node.fills[0].color);
+
+			if (color === '#ffffff' || color === '#fff') {
+				props['color'] = 'var(--white)';
+			} else if (color === '#000000' || color === '#000') {
+				props['color'] = 'var(--black)';
+			} else {
+				props['color'] = findMatchingVariable(color, variables.colors);
+			}
 		}
 
 		if (!isNaN(fontSize)) {
@@ -214,12 +240,45 @@ const FigmaViewer = ({ fileKey }) => {
 	return (
 		<>
 			<div>
-				<input
-					placeholder='Client Name'
-					onChange={setClientName}
-					type='text'
-				/>
-				<button>Find</button>
+				<div>
+					<input
+						placeholder='Client Name'
+						value={clientName}
+						onChange={(e) => {
+							setClientName(e.target.value);
+							localStorage.setItem('clientName', e.target.value);
+						}}
+						type='text'
+					/>
+					<button onClick={() => fetchData()}>Find</button>
+				</div>
+				<div>
+					<p>Are colors declared in Swatches?</p>
+					<label>
+						<input
+							type='radio'
+							name='ratio'
+							checked={!areColorsInSwatches}
+							onChange={() => {
+								setAreColorsInSwatches(false);
+								localStorage.setItem('areColorsInSwatches', 'false');
+							}}
+						/>
+						Variables
+					</label>
+					<label>
+						<input
+							type='radio'
+							name='ratio'
+							checked={areColorsInSwatches}
+							onChange={() => {
+								setAreColorsInSwatches(true);
+								localStorage.setItem('areColorsInSwatches', 'true');
+							}}
+						/>
+						Swatches
+					</label>
+				</div>
 			</div>
 			{data ? (
 				<div className={styles.container}>
