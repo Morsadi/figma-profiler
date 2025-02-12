@@ -23,7 +23,11 @@ const FigmaViewer = ({ fileKey }) => {
 	const [activeNodeId, setActiveNodeId] = useState(null);
 	const [clientName, setClientName] = useState(() => {
 		const storedClientName = localStorage.getItem('clientName');
-		return storedClientName || 'dayton-redesign';
+		return storedClientName || 'lasvegas-redesign';
+	});
+	const [site, setSite] = useState(() => {
+		const storedSite = localStorage.getItem('site');
+		return storedSite || 'primary';
 	});
 
 	const [areColorsInSwatches, setAreColorsInSwatches] = useState(() => {
@@ -34,30 +38,17 @@ const FigmaViewer = ({ fileKey }) => {
 	useEffect(() => {
 		localStorage.setItem('clientName', clientName);
 		localStorage.setItem('areColorsInSwatches', JSON.stringify(areColorsInSwatches));
-	}, [clientName, areColorsInSwatches]);
+
+		localStorage.setItem('site', site);
+		localStorage.setItem('areColorsInSwatches', JSON.stringify(areColorsInSwatches));
+	}, [clientName, site, areColorsInSwatches]);
 
 	useEffect(() => {
-		// const fetchData = async () => {
-		// 	try {
-		// 		const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
-		// 		setData(data);
-		// 		setVariables(variables); // Update variables state
-		// 		setCurrentNode(data.document.children[0]); // Setting initial node
-		// 		setPath([data.document.children[0]]); // Initialize path with initial node
-		// 	} catch (error) {
-		// 		console.error('Error fetching data:', error);
-		// 	} finally {
-		// 		hljs.highlightAll();
-		// 	}
-		// };
 		fetchData();
 	}, []);
 
 	const fetchData = async () => {
-			// setData(null);
-			// setVariables(null);
-			// setCurrentNode(null);
-			// setPath([]);
+		setCurrentStyle(null);
 
 		try {
 			const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
@@ -81,7 +72,7 @@ const FigmaViewer = ({ fileKey }) => {
 			headers: {
 				'Content-type': 'application/json',
 			},
-			body: JSON.stringify({ clientName, areColorsInSwatches }),
+			body: JSON.stringify({ clientName, areColorsInSwatches, site }),
 		});
 
 		return response.json();
@@ -238,8 +229,8 @@ const FigmaViewer = ({ fileKey }) => {
 	};
 
 	return (
-		<>
-			<div>
+		<section className={styles.mainSection}>
+			<div className={styles.settings}>
 				<div>
 					<input
 						placeholder='Client Name'
@@ -247,6 +238,15 @@ const FigmaViewer = ({ fileKey }) => {
 						onChange={(e) => {
 							setClientName(e.target.value);
 							localStorage.setItem('clientName', e.target.value);
+						}}
+						type='text'
+					/>
+					<input
+						placeholder='Site'
+						value={site}
+						onChange={(e) => {
+							setSite(e.target.value);
+							localStorage.setItem('site', e.target.value);
 						}}
 						type='text'
 					/>
@@ -341,7 +341,7 @@ const FigmaViewer = ({ fileKey }) => {
 			) : (
 				<p>Loading...</p>
 			)}
-		</>
+		</section>
 	);
 };
 

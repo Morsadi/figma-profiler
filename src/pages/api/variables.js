@@ -3,7 +3,7 @@
 import fs from 'fs';
 
 export default function handler(req, res) {
-	const { clientName, areColorsInSwatches} =  req.body;
+	const { clientName, areColorsInSwatches, site = '' } = req.body;
 
 	// const clientName = process.env.CLIENT_NAME;
 	const clientsFolderPath = process.env.CLIENTS_FOLDER_PATH;
@@ -17,16 +17,16 @@ export default function handler(req, res) {
 	}
 
 	// If stored under primary instead of global folder
-	const clientFolderPath = `${clientsFolderPath}/${clientName}/sites/primary/node_modules/plugins_extended/common/virtuals/css`;
-	// Multi language
-	// const clientFolderPath = `${clientsFolderPath}/${clientName}/node_modules/plugins_extended/common/virtuals/css`;
+	const clientFolderPath = site
+		? `${clientsFolderPath}/${clientName}/sites/${site}/node_modules/plugins_extended/common/virtuals/css`
+		: `${clientsFolderPath}/${clientName}/node_modules/plugins_extended/common/virtuals/css`;
 
+		
 	if (!fs.existsSync(clientFolderPath)) {
 		return res.status(404).json({ error: 'Client folder not found' });
 	}
 
 	console.log(clientsFolderPath);
-	
 
 	const variablesPath = `${clientFolderPath}/variables.css`;
 	const swatchesPath = `${clientFolderPath}/swatches.css`;
@@ -59,15 +59,13 @@ export default function handler(req, res) {
 			lineHeight,
 			colors,
 			clientName,
-            anyEmpty
+			anyEmpty,
 		});
 	} catch (error) {
 		console.error(error);
-		return res
-			.status(500)
-			.json({
-				error: 'Failed to read variables and/or swatches files. Please check the files are present and the path is correct.',
-			});
+		return res.status(500).json({
+			error: 'Failed to read variables and/or swatches files. Please check the files are present and the path is correct.',
+		});
 	}
 }
 
