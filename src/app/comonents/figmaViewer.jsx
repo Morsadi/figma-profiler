@@ -22,26 +22,24 @@ const FigmaViewer = ({ fileKey }) => {
 	const [path, setPath] = useState([]);
 	const [activeNodeId, setActiveNodeId] = useState(null);
 	const [clientName, setClientName] = useState(() => {
-		const storedClientName = localStorage.getItem('clientName');
-		return storedClientName || 'lasvegas-redesign';
+		if (typeof window === 'undefined') return 'base';
+		if (typeof window !== 'undefined') {
+			const storedClientName = localStorage.getItem('clientName');
+			return storedClientName || 'base';
+		}
 	});
 	const [site, setSite] = useState(() => {
+		if (typeof window === 'undefined') return 'primary';
+
 		const storedSite = localStorage.getItem('site');
 		return storedSite || 'primary';
 	});
 
-	const [areColorsInSwatches, setAreColorsInSwatches] = useState(() => {
-		const storedAreColorsInSwatches = localStorage.getItem('areColorsInSwatches');
-		return storedAreColorsInSwatches ? JSON.parse(storedAreColorsInSwatches) : false;
-	});
-
 	useEffect(() => {
 		localStorage.setItem('clientName', clientName);
-		localStorage.setItem('areColorsInSwatches', JSON.stringify(areColorsInSwatches));
 
 		localStorage.setItem('site', site);
-		localStorage.setItem('areColorsInSwatches', JSON.stringify(areColorsInSwatches));
-	}, [clientName, site, areColorsInSwatches]);
+	}, [clientName, site]);
 
 	useEffect(() => {
 		fetchData();
@@ -72,7 +70,7 @@ const FigmaViewer = ({ fileKey }) => {
 			headers: {
 				'Content-type': 'application/json',
 			},
-			body: JSON.stringify({ clientName, areColorsInSwatches, site }),
+			body: JSON.stringify({ clientName, site }),
 		});
 
 		return response.json();
@@ -251,33 +249,6 @@ const FigmaViewer = ({ fileKey }) => {
 						type='text'
 					/>
 					<button onClick={() => fetchData()}>Find</button>
-				</div>
-				<div>
-					<p>Are colors declared in Swatches?</p>
-					<label>
-						<input
-							type='radio'
-							name='ratio'
-							checked={!areColorsInSwatches}
-							onChange={() => {
-								setAreColorsInSwatches(false);
-								localStorage.setItem('areColorsInSwatches', 'false');
-							}}
-						/>
-						Variables
-					</label>
-					<label>
-						<input
-							type='radio'
-							name='ratio'
-							checked={areColorsInSwatches}
-							onChange={() => {
-								setAreColorsInSwatches(true);
-								localStorage.setItem('areColorsInSwatches', 'true');
-							}}
-						/>
-						Swatches
-					</label>
 				</div>
 			</div>
 			{data ? (

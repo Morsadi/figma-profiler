@@ -3,7 +3,7 @@
 import fs from 'fs';
 
 export default function handler(req, res) {
-	const { clientName, areColorsInSwatches, site = '' } = req.body;
+	const { clientName, site = 'primary' } = req.body;
 
 	// const clientName = process.env.CLIENT_NAME;
 	const clientsFolderPath = process.env.CLIENTS_FOLDER_PATH;
@@ -47,7 +47,10 @@ export default function handler(req, res) {
 		const fontSizes = extractStylesFromPrefix(variablesContent, '--text-');
 		const letterSpacing = extractStylesFromPrefix(variablesContent, '--tracking-');
 		const lineHeight = extractStylesFromPrefix(variablesContent, '--leading-');
-		const colors = extractColorsFromSwatches(areColorsInSwatches ? swatchesContent : variablesContent);
+		
+		const colorsFromVariables = extractColorsFromSwatches(variablesContent);
+		const colorsFromSwatches = extractColorsFromSwatches(swatchesContent);
+		const colors = [...colorsFromVariables, ...colorsFromSwatches];
 
 		const anyEmpty = [fontFamily, fontSizes, letterSpacing, lineHeight, colors].some((arr) => !arr.length);
 		if (anyEmpty) return res.status(404).json({ error: 'No variables found for this client' });
