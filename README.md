@@ -23,20 +23,13 @@ Figma Profiler is a tool designed to streamline the process of managing design a
 2. Add the following environment variables to the `.env` file:
 
     ```bash
-    CLIENT_NAME=
     ACCESS_TOKEN=
     FILE_KEY=
     CLIENTS_FOLDER_PATH=
     ```
 
-    Example
-
-    ```bash
-    CLIENT_NAME=amarillo-redesign
-    ACCESS_TOKEN=figd_6Pwt0P3Xe9_l3A8p4_Gmd3DmjotN3Vrptc_BTgDf
-    FILE_KEY=eG9oxCYlvvYWDraiQUzalz
-    CLIENTS_FOLDER_PATH=C:\cms30\nodeServer\clients\
-    ```
+    - Find Access Token in https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens
+    - File Key is 22ch and can be found in the Figma page link you're working on https://app.screencast.com/dNwI6IFqYZON7
 
 ## Starting the Application
 
