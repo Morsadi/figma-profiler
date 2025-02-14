@@ -21,31 +21,58 @@ const FigmaViewer = ({ fileKey }) => {
 	const [currentStyle, setCurrentStyle] = useState(null);
 	const [path, setPath] = useState([]);
 	const [activeNodeId, setActiveNodeId] = useState(null);
+	const [clientName, setClientName] = useState(() => {
+		if (typeof window === 'undefined') return 'base';
+		if (typeof window !== 'undefined') {
+			const storedClientName = localStorage.getItem('clientName');
+			return storedClientName || 'base';
+		}
+	});
+	const [site, setSite] = useState(() => {
+		if (typeof window === 'undefined') return 'primary';
+
+		const storedSite = localStorage.getItem('site');
+		return storedSite || 'primary';
+	});
 
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
-				setData(data);
-				setVariables(variables); // Update variables state
-				setCurrentNode(data.document.children[0]); // Setting initial node
-				setPath([data.document.children[0]]); // Initialize path with initial node
-			} catch (error) {
-				console.error('Error fetching data:', error);
-			} finally {
-				hljs.highlightAll(); 
-			}
-		};
+		localStorage.setItem('clientName', clientName);
 
+		localStorage.setItem('site', site);
+	}, [clientName, site]);
+
+	useEffect(() => {
 		fetchData();
 	}, []);
 
+	const fetchData = async () => {
+		setCurrentStyle(null);
+
+		try {
+			const [data, variables] = await Promise.all([fetchInitialData(), fetchInitialVariables()]);
+			setData(data);
+			setVariables(variables); // Update variables state
+			setCurrentNode(data.document.children[0]); // Setting initial node
+			setPath([data.document.children[0]]); // Initialize path with initial node
+		} catch (error) {
+			console.error('Error fetching data:', error);
+		} finally {
+			hljs.highlightAll();
+		}
+	};
 	const fetchInitialData = async () => {
 		const response = await fetch(`/api/data`);
 		return response.json();
 	};
 	const fetchInitialVariables = async () => {
-		const response = await fetch(`/api/variables`);
+		const response = await fetch(`/api/variables`, {
+			method: 'POST',
+			headers: {
+				'Content-type': 'application/json',
+			},
+			body: JSON.stringify({ clientName, site }),
+		});
+
 		return response.json();
 	};
 
@@ -158,6 +185,8 @@ const FigmaViewer = ({ fileKey }) => {
 		const lineHeight = parseFloat(style.lineHeightPercentFontSize);
 		const fontWeight = parseFloat(style.fontWeight);
 
+		console.log(style);
+
 		if (style.fontFamily) {
 			props['font-family'] = fontFamilyToVariable(style.fontFamily);
 		}
@@ -167,7 +196,15 @@ const FigmaViewer = ({ fileKey }) => {
 		}
 
 		if (node.fills[0]?.color) {
-			props['color'] = findMatchingVariable(rgbToHex(node.fills[0].color), variables.colors);
+			let color = rgbToHex(node.fills[0].color);
+
+			if (color === '#ffffff' || color === '#fff') {
+				props['color'] = 'var(--white)';
+			} else if (color === '#000000' || color === '#000') {
+				props['color'] = 'var(--black)';
+			} else {
+				props['color'] = findMatchingVariable(color, variables.colors);
+			}
 		}
 
 		if (!isNaN(fontSize)) {
@@ -182,18 +219,45 @@ const FigmaViewer = ({ fileKey }) => {
 			props['line-height'] = lineHeightPxToEm(lineHeight);
 		}
 
+		if (style.textCase === 'UPPER') {
+			props['text-transform'] = 'uppercase';
+		}
+
 		return props;
 	};
 
 	return (
-		<>
+		<section className={styles.mainSection}>
+			<div className={styles.settings}>
+				<div>
+					<input
+						placeholder='Client Name'
+						value={clientName}
+						onChange={(e) => {
+							setClientName(e.target.value);
+							localStorage.setItem('clientName', e.target.value);
+						}}
+						type='text'
+					/>
+					<input
+						placeholder='Site'
+						value={site}
+						onChange={(e) => {
+							setSite(e.target.value);
+							localStorage.setItem('site', e.target.value);
+						}}
+						type='text'
+					/>
+					<button onClick={() => fetchData()}>Find</button>
+				</div>
+			</div>
 			{data ? (
 				<div className={styles.container}>
 					{variables && (
 						<div className={styles.tooltip}>
 							<span data-uploaded={variables.error ? false : true}>
 								<IoShieldCheckmarkSharp />
-								{variables?.clientName || 'Client'} Variables
+								{variables?.clientName} Variables
 							</span>
 						</div>
 					)}
@@ -248,7 +312,7 @@ const FigmaViewer = ({ fileKey }) => {
 			) : (
 				<p>Loading...</p>
 			)}
-		</>
+		</section>
 	);
 };
 
